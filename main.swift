@@ -1,6 +1,5 @@
 import AppKit
 import CoreLocation
-import ServiceManagement
 
 struct Forecast: Decodable {
     struct Hourly: Decodable {
@@ -62,7 +61,7 @@ final class App: NSObject, NSApplicationDelegate, CLLocationManagerDelegate {
         URLSession.shared.dataTask(with: req) { data, resp, err in
             var f: Forecast?
             do { f = try JSONDecoder().decode(Forecast.self, from: data ?? Data()) }
-            catch { NSLog("WeatherDiff: status=%d err=%@ decode=%@", (resp as? HTTPURLResponse)?.statusCode ?? -1,
+            catch { NSLog("TempDiff: status=%d err=%@ decode=%@", (resp as? HTTPURLResponse)?.statusCode ?? -1,
                           String(describing: err), String(describing: error)) }
             DispatchQueue.main.async { self.update(f) }
         }.resume()
@@ -74,7 +73,7 @@ final class App: NSObject, NSApplicationDelegate, CLLocationManagerDelegate {
         guard let f, let i = f.hourly.time.firstIndex(of: hour!),
               i >= 24, i + 24 < t.count, let y = t[i - 24], let n = t[i], let m = t[i + 24]
         else {
-            NSLog("WeatherDiff: no usable data (hour=%@, count=%d)", hour ?? "-", t.count)
+            NSLog("TempDiff: no usable data (hour=%@, count=%d)", hour ?? "-", t.count)
             DispatchQueue.main.asyncAfter(deadline: .now() + 60) { self.refresh() }
             if item.button?.title.contains("°") != true { show("⚠︎", ["Weather unavailable, retrying…"]) }
             return
@@ -95,11 +94,22 @@ final class App: NSObject, NSApplicationDelegate, CLLocationManagerDelegate {
               "Updated \(time)"])
     }
 
+    let agent = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/LaunchAgents/io.github.boyanangelov.tempdiff.plist")
+    var startsAtLogin: Bool { FileManager.default.fileExists(atPath: agent.path) }
+
     @objc func toggleLogin(_ sender: NSMenuItem) {
-        let s = SMAppService.mainApp
-        do { try s.status == .enabled ? s.unregister() : s.register() }
-        catch { NSLog("WeatherDiff: login item error %@", String(describing: error)) }
-        sender.state = s.status == .enabled ? .on : .off
+        do {
+            if startsAtLogin { try FileManager.default.removeItem(at: agent) }
+            else {
+                let plist: [String: Any] = ["Label": "io.github.boyanangelov.tempdiff",
+                                            "ProgramArguments": [Bundle.main.executablePath!],
+                                            "RunAtLoad": true, "ProcessType": "Interactive"]
+                try FileManager.default.createDirectory(at: agent.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0).write(to: agent)
+            }
+        } catch { NSLog("TempDiff: login item error %@", String(describing: error)) }
+        sender.state = startsAtLogin ? .on : .off
     }
 
     func describe(_ c: Int, night: Bool) -> (String, String) {
@@ -128,7 +138,7 @@ final class App: NSObject, NSApplicationDelegate, CLLocationManagerDelegate {
         if !info.isEmpty { menu.addItem(.separator()) }
         let login = menu.addItem(withTitle: "Start at Login", action: #selector(toggleLogin), keyEquivalent: "")
         login.target = self
-        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        login.state = startsAtLogin ? .on : .off
         menu.addItem(withTitle: "Refresh", action: #selector(refresh), keyEquivalent: "r").target = self
         menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.menu = menu
