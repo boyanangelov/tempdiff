@@ -1,6 +1,6 @@
 # TempDiff
 
-A tiny macOS menu-bar app that tells you whether tomorrow at this hour will be warmer or colder than now: `↑3° warmer`, `↓2° colder` or `= same`.
+A tiny macOS menu-bar app that tells you whether it is warmer or colder now than at this hour yesterday: `↑3° warmer than yesterday`, `↓2° colder than yesterday` or `= same as yesterday`.
 
 ![Opening TempDiff's menu to see yesterday, now and tomorrow](docs/menu-demo.gif)
 
@@ -8,7 +8,7 @@ A tiny macOS menu-bar app that tells you whether tomorrow at this hour will be w
 
 ## Why
 
-Weather apps give you a forecast, but what you usually want to know is how tomorrow compares with today. You already know what today feels like, so "2° colder" tells you more than "7°".
+Weather apps give you a forecast, but what you usually want to know is how today compares with yesterday. You already know what yesterday felt like, so "2° colder" tells you more than "7°".
 
 - **One glance.** The difference sits in the menu bar, so you never open an app.
 - **Same hour, apples to apples.** It compares now with exactly 24 hours later, not daily highs and lows.

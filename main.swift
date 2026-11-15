@@ -86,11 +86,11 @@ final class App: NSObject, NSApplicationDelegate, CLLocationManagerDelegate {
             return "  \(icon) \(text)\(rain)"
         }
         let time = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short)
-        let d = mr - nr
-        show(d == 0 ? "= same" : "\(diff(d)) \(d > 0 ? "warmer" : "colder")",
+        let d = nr - yr
+        show(d == 0 ? "= same as yesterday" : "\(diff(d)) \(d > 0 ? "warmer" : "colder") than yesterday",
              ["Yesterday  \(yr)°" + sky(i - 24),
-              "Now  \(nr)°  \(diff(nr - yr))" + sky(i),
-              "Tomorrow  \(mr)°  \(diff(mr - nr))" + sky(i + 24),
+              "Now  \(nr)°  (\(diff(nr - yr)) vs yesterday)" + sky(i),
+              "Tomorrow  \(mr)°  (\(diff(mr - nr)) vs now)" + sky(i + 24),
               "Updated \(time)"])
     }
 
